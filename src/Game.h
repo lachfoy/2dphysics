@@ -34,13 +34,6 @@ struct Object
     float mass;
 };
 
-struct Collision 
-{
-    Object* a;
-    Object* b;
-    Hit hit;
-};
-
 class Game
 {
 public:
@@ -66,26 +59,16 @@ private:
     TextRenderer mTextRenderer;
     Font mFont;
 
-    glm::vec2 mPlayerPos;
-    glm::vec2 mPlayerSize;
-    
-    
-    glm::vec2 mRayPos;
+
     int mMousePosition[2];
     glm::vec2 mDir;
     float mSpeed;
 
-    glm::vec2 mTileSize;
-    std::vector<glm::vec2> mTileCenters;
+    // glm::vec2 mAcceleration;
+    // glm::vec2 mVelocity;
+    // float mFriction;
 
-    glm::vec2 mAcceleration;
-    glm::vec2 mVelocity;
-    float mFriction;
-
-    std::vector<Object*> mObjects;
-    glm::vec2 mGravity = glm::vec2(0, 9.81f * 100);
-
-    Hit mHit;
+    // std::vector<Object*> mObjects;
 
 };
 

@@ -4,16 +4,14 @@
 #include <glm/glm.hpp>
 
 // hit info
-struct Hit
+struct CollisionPoints
 {
-    glm::vec2 contactPoint;
-    float fraction;
-    glm::vec2 normal;
+    glm::vec2 a;
+    glm::vec2 b;
     float depth;
+    glm::vec2 normal;
 };
 
-bool RayPlane(const glm::vec2& rayOrigin, const glm::vec2& rayDir, const glm::vec2& planeNormal, const glm::vec2& pointOnPlane, Hit& hit);
-bool RayBox(const glm::vec2& rayOrigin, const glm::vec2& rayDir, const glm::vec2& boxCenter, const glm::vec2& boxHalfSize, Hit& hit);
-bool RayCircle(const glm::vec2& rayOrigin, const glm::vec2& rayDir, const glm::vec2& circlePos, const float circleRadius, Hit& hit);
+bool CircleVsCircle(const glm::vec2& posA, float radiusA, const glm::vec2& posB, float radiusB, CollisionPoints& collisionPoints);
 
 #endif // PHYSICS_H_

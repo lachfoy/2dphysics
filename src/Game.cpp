@@ -4,7 +4,6 @@
 #include <iostream>
 #include <cmath> // floor
 
-#include "Colors.h"
 #include <glm/gtx/matrix_transform_2d.hpp>
 
 bool Game::Init()
@@ -141,42 +140,14 @@ void Game::Create()
     mTextRenderer.Init(960, 640);
     mFont.Load("fonts/arial_16px.fnt");
 
-    mPlayerPos = glm::vec2{ 400.0f, 300.0f };
-    mPlayerSize = glm::vec2{ 64.0f, 64.0f };
-    mRayPos = glm::vec2{ 100.0f, 100.0f };
-
     mSpeed = 4000.0f;
-    mFriction = 10.0f;
+    // mFriction = 10.0f;
 
-    const int tileMapWidth = 15;
-    const int tileMapHeight = 10;
-    int tileMap[tileMapWidth * tileMapHeight] = {
-        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-        1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-        1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-        1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-        1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1,
-        1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-        1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1,
-        1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1,
-        1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
-    };
-    
-    mTileSize = glm::vec2{ 64.0f, 64.0f };
-    for (int x = 0; x < tileMapWidth; x++) {
-        for (int y = 0; y < tileMapHeight; y++) {
-            if (tileMap[x + tileMapWidth * y] == 1) {
-                mTileCenters.push_back(glm::vec2{ x * mTileSize.x, y * mTileSize.y } + mTileSize * 0.5f);
-            }
-        }
-    }
+    // mObjects.push_back(new Object(glm::vec2{ 400, 300 }));
+    // mObjects.push_back(new Object(glm::vec2{ 500, 400 }));
 
-    mObjects.push_back(new Object(glm::vec2{ 400, 300 }));
-    mObjects.push_back(new Object(glm::vec2{ 500, 400 }));
-
-    // pretend velocity vector
-    mObjects[1]->velocity = glm::vec2{ -100.0f, -50.0f };
+    // // pretend velocity vector
+    // mObjects[1]->velocity = glm::vec2{ -100.0f, -50.0f };
 }
 
 void Game::HandleInput()
@@ -190,64 +161,27 @@ void Game::HandleInput()
 
 void Game::Update(float deltaTime)
 {
-    //mObjects[1]->position = glm::vec2{ mMousePosition[0], mMousePosition[1] };
-    mObjects[1]->force = mDir * mSpeed * deltaTime;
 
-    for (const auto& object : mObjects) {
-        //object->force = glm::vec2{ 0.0f, 9000.0f }; // some kind of force
-        glm::vec2 acceleration = object->force / object->mass;
-        acceleration -= object->velocity * 1.0f; // apply friction
-
-        // integrate
-        object->velocity += acceleration * deltaTime;
-        glm::vec2 dp = object->velocity * deltaTime;
-
-        // test collision
-        Hit hit;
-        for (const auto& other : mObjects) {
-            if (object == other) break;
-
-            bool collision = RayCircle(object->position, dp, other->position, object->radius + other->radius, hit);
-            if (collision) {
-                // ahh
-                object->position = hit.contactPoint;
-                dp = dp - 1 * glm::(dp, hit.normal) * hit.normal;
-            }
-
-            std::cout << (collision ? "true" : "false") <<"\n";
-        }
-
-
-
-        object->position += dp;
-    }
-
-
-    mDir = {};
 }
 
 void Game::Draw()
 {
-    for (const auto& object : mObjects) {
-        mRenderer.DrawCircle(object->position, object->radius, glm::vec3{ 0.0f, 1.0f, 0.0f });
-        //mRenderer.DrawLine(object->position, object->position + object->velocity, glm::vec3{ 0.0f, 1.0f, 1.0f });
+    glm::vec2 circleAPos = { 400, 300 };
+    CollisionPoints collisionPoints;
+    bool collision = CircleVsCircle(circleAPos, 60.0f, glm::vec2{ mMousePosition[0], mMousePosition[1] }, 80.0f, collisionPoints);
+
+    mRenderer.DrawCircle(circleAPos, 60.0f, glm::vec3{ 1, 0, 1 });
+    mRenderer.DrawCircle(glm::vec2{ mMousePosition[0], mMousePosition[1] }, 80.0f, collision ? glm::vec3{ 1, 0, 0 } : glm::vec3{ 0, 1, 1 });
+
+    if (collision)
+    {
+        mRenderer.DrawCircle(collisionPoints.a, 10.0f, glm::vec3{ 1, 1, 0 });
+        mRenderer.DrawCircle(collisionPoints.b, 10.0f, glm::vec3{ 0, 0, 1 });
     }
-
-    // mRenderer.DrawCircle(mObjects[0]->position, mObjects[0]->radius + mObjects[1]->radius, glm::vec3{ 1.0f, 0.0f, 1.0f });
-    // mRenderer.DrawCircle(mObjects[1]->position + mObjects[1]->velocity, mObjects[1]->radius, glm::vec3{ 1.0f, 1.0f, 0.0f });
-
-    // // the depth should be 
-    // mRenderer.DrawLine(mHit.contactPoint, mHit.contactPoint + mHit.normal * mHit.depth, glm::vec3{ 1.0f, 0.0f, 0.0f });
-    //mHit
 }
 
 void Game::Destroy()
 {
-
-    for (const auto& object : mObjects) {
-        delete object;
-    }
-
     SDL_GL_DeleteContext(mContext);
     SDL_DestroyWindow(mWindow);
     
