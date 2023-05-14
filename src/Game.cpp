@@ -61,7 +61,7 @@ bool Game::Init()
 
     // this functionality exists i guess?
     glEnable(GL_LINE_SMOOTH);
-    glLineWidth(1);
+    glLineWidth(2);
     
     return true;
 }
@@ -190,8 +190,6 @@ void Game::Update(float delta_time)
 
                 float jv = glm::dot(j_va, physics_body_A->velocity) + glm::dot(j_vb, physics_body_B->velocity);
                 float lambda = effective_mass * (-(jv + b));
-
-                //std::cout << lambda  << "\n";
 
                 // apply impulse
                 physics_body_A->velocity += (1.0f / physics_body_A->mass) * j_va * lambda;
