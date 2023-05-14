@@ -13,26 +13,7 @@
 #include "Physics.h"
 
 #include <vector>
-
-struct Object
-{
-    Object(glm::vec2 a_position) {
-        position = a_position;
-        radius = 100.0f;
-        mass = 5.0f;
-        velocity = {};
-        force = {};
-    }
-
-    glm::vec2 position;
-    glm::vec2 velocity; // rate of change of position over time
-    
-    // acceleration is the rate of change of velocity over time.
-    
-    glm::vec2 force;
-    float radius;
-    float mass;
-};
+#include <memory>
 
 class Game
 {
@@ -45,30 +26,22 @@ public:
 private:
     void Create();
     void HandleInput();
-    void Update(float deltaTime);
+    void Update(float delta_time);
     void Draw();
     void Destroy();
     
-    SDL_Window* mWindow;
-    SDL_GLContext mContext;
+    SDL_Window* window_;
+    SDL_GLContext context_;
 
-    bool mRunning = true;
-
-    Input mInput;
-    Renderer mRenderer;
-    TextRenderer mTextRenderer;
-    Font mFont;
+    Input input_;
+    Renderer renderer_;
+    TextRenderer text_renderer_;
+    Font font_;
 
 
-    int mMousePosition[2];
-    glm::vec2 mDir;
-    float mSpeed;
+    int mouse_position_[2];
 
-    // glm::vec2 mAcceleration;
-    // glm::vec2 mVelocity;
-    // float mFriction;
-
-    // std::vector<Object*> mObjects;
+    std::vector<std::unique_ptr<PhysicsBody>> physics_bodies_;
 
 };
 
