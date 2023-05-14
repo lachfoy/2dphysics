@@ -152,18 +152,32 @@ void Game::Create()
 
     // physics_bodies_.push_back(std::make_unique<PhysicsBody>(glm::vec2{ 400.0f, 300.0f }, 50.0f));
     // physics_bodies_.push_back(std::make_unique<PhysicsBody>(glm::vec2{ 540.0f, 330.0f }, 50.0f));
+
+    physics_bodies_.push_back(std::make_unique<PhysicsBody>(glm::vec2{ 400.0f, 300.0f }, 50.0f));
 }
 
 void Game::HandleInput()
 {
     if (input_.IsKeyPressed(SDL_SCANCODE_SPACE)) physics_bodies_.push_back(std::make_unique<PhysicsBody>(glm::vec2{ mouse_position_[0], mouse_position_[1] }, 50.0f));
+    if (input_.IsKeyHeld(SDL_SCANCODE_W)) dir_.y = -1.0f;
+    if (input_.IsKeyHeld(SDL_SCANCODE_A)) dir_.x = -1.0f;
+    if (input_.IsKeyHeld(SDL_SCANCODE_S)) dir_.y = 1.0f;
+    if (input_.IsKeyHeld(SDL_SCANCODE_D)) dir_.x = 1.0f;
 }
 
 void Game::Update(float delta_time)
 {
+    
+
     // integrate
     for (const auto& physics_body : physics_bodies_) {
         glm::vec2 acceleration = physics_body->force / physics_body->mass;
+
+        if (physics_body == physics_bodies_[0])
+        {
+            acceleration = dir_ * 1000.0f;
+        }
+
         acceleration -= physics_body->velocity * physics_body->friction; // apply friction
 
         physics_body->velocity += acceleration * delta_time;
@@ -198,6 +212,8 @@ void Game::Update(float delta_time)
         }
         
     }
+
+    dir_ = {};//reset dir
 }
 
 void Game::Draw()
@@ -217,7 +233,7 @@ void Game::Draw()
 
     for (const auto& physics_body : physics_bodies_)
     {
-        renderer_.DrawCircle(physics_body->position, physics_body->radius, glm::vec3{ 1, 1, 1 });
+        renderer_.DrawCircle(physics_body->position, physics_body->radius, physics_body == physics_bodies_[0] ? glm::vec3{ 0, 1, 0 } : glm::vec3{ 1, 1, 1 });
     }
 }
 

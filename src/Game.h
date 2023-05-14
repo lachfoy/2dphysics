@@ -40,6 +40,7 @@ private:
 
 
     int mouse_position_[2];
+    glm::vec2 dir_;
 
     std::vector<std::unique_ptr<PhysicsBody>> physics_bodies_;
 
