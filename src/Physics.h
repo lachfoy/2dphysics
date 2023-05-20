@@ -36,5 +36,8 @@ struct CollisionPoints
 };
 
 bool CircleVsCircle(const glm::vec2& position_A, float radius_A, const glm::vec2& position_B, float radius_B, CollisionPoints& collision_points);
+bool CircleVsAABB(const glm::vec2& circleCenter, float circleRadius, const glm::vec2& aabbMin, const glm::vec2& aabbMax, CollisionPoints& collisionPoints);
+
+//bool RayBox(const glm::vec2& rayOrigin, const glm::vec2& rayDir, const glm::vec2& boxMin, const glm::vec2& boxMax, CollisionPoints& collision_points);
 
 #endif // PHYSICS_H_

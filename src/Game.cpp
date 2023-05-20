@@ -153,12 +153,12 @@ void Game::Create()
     // physics_bodies_.push_back(std::make_unique<PhysicsBody>(glm::vec2{ 400.0f, 300.0f }, 50.0f));
     // physics_bodies_.push_back(std::make_unique<PhysicsBody>(glm::vec2{ 540.0f, 330.0f }, 50.0f));
 
-    physics_bodies_.push_back(std::make_unique<PhysicsBody>(glm::vec2{ 400.0f, 300.0f }, 50.0f));
+    physics_bodies_.push_back(std::make_unique<PhysicsBody>(glm::vec2{ 400.0f, 300.0f }, 40.0f));
 }
 
 void Game::HandleInput()
 {
-    if (input_.IsKeyPressed(SDL_SCANCODE_SPACE)) physics_bodies_.push_back(std::make_unique<PhysicsBody>(glm::vec2{ mouse_position_[0], mouse_position_[1] }, 50.0f));
+    if (input_.IsKeyHeld(SDL_SCANCODE_SPACE)) physics_bodies_.push_back(std::make_unique<PhysicsBody>(glm::vec2{ mouse_position_[0], mouse_position_[1] }, 40.0f));
     if (input_.IsKeyHeld(SDL_SCANCODE_W)) dir_.y = -1.0f;
     if (input_.IsKeyHeld(SDL_SCANCODE_A)) dir_.x = -1.0f;
     if (input_.IsKeyHeld(SDL_SCANCODE_S)) dir_.y = 1.0f;
@@ -167,21 +167,24 @@ void Game::HandleInput()
 
 void Game::Update(float delta_time)
 {
-    
-
     // integrate
     for (const auto& physics_body : physics_bodies_) {
-        glm::vec2 acceleration = physics_body->force / physics_body->mass;
-
+        glm::vec2 addedVelocity = glm::vec2(0.0f);
         if (physics_body == physics_bodies_[0])
         {
-            acceleration = dir_ * 1000.0f;
+            physics_body->force = dir_ * 1000.0f;
+            //physics_body->velocity = dir_ * 50.0f;
+            addedVelocity = dir_ * 1.0f * 32.0f;
         }
 
+        
+        glm::vec2 acceleration = (physics_body->velocity + addedVelocity - physics_body->velocity) / delta_time;
+
+        //glm::vec2 acceleration = physics_body->force / physics_body->mass;
         acceleration -= physics_body->velocity * physics_body->friction; // apply friction
 
         physics_body->velocity += acceleration * delta_time;
-        physics_body->position += physics_body->velocity * delta_time;
+        physics_body->position += 0.5f * (physics_body->velocity + (physics_body->velocity + acceleration * delta_time)) * delta_time;
     }
     
     // constraint = pointB - pointA dot normal >= 0
@@ -210,7 +213,6 @@ void Game::Update(float delta_time)
                 physics_body_B->velocity += (1.0f / physics_body_B->mass) * j_vb * lambda;
             }
         }
-        
     }
 
     dir_ = {};//reset dir
