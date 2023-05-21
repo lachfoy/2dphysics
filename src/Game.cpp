@@ -6,6 +6,10 @@
 
 #include <glm/gtx/matrix_transform_2d.hpp>
 
+Game::Game()
+{
+}
+
 bool Game::Init()
 {
     // initialize SDL video
@@ -137,29 +141,27 @@ void Game::Run()
 
 void Game::Create()
 {
-    renderer_.Init(960, 640);
-    text_renderer_.Init(960, 640);
+    renderer_.Init(960 / 4, 640 / 4);
+    text_renderer_.Init(960 / 2, 640 / 2);
     font_.Load("fonts/arial_16px.fnt");
 
+    // Player!!
+    player_ = std::make_shared<EntityPlayer>(glm::vec2(400.0f / 4, 300.0f /4));
+    entity_list_.push_back(player_);
 
-    // mFriction = 10.0f;
-
-    // mObjects.push_back(new Object(glm::vec2{ 400, 300 }));
-    // mObjects.push_back(new Object(glm::vec2{ 500, 400 }));
-
-    // // pretend velocity vector
-    // mObjects[1]->velocity = glm::vec2{ -100.0f, -50.0f };
-
-    // physics_bodies_.push_back(std::make_unique<PhysicsBody>(glm::vec2{ 400.0f, 300.0f }, 50.0f));
-    // physics_bodies_.push_back(std::make_unique<PhysicsBody>(glm::vec2{ 540.0f, 330.0f }, 50.0f));
-
-    physics_bodies_.push_back(std::make_unique<PhysicsBody>(glm::vec2{ 400.0f, 300.0f }, 40.0f));
 }
 
 void Game::HandleInput()
 {
-    if (input_.IsKeyHeld(SDL_SCANCODE_SPACE)) physics_bodies_.push_back(std::make_unique<PhysicsBody>(glm::vec2{ mouse_position_[0], mouse_position_[1] }, 40.0f));
-    if (input_.IsKeyHeld(SDL_SCANCODE_W)) dir_.y = -1.0f;
+    if (input_.IsKeyPressed(SDL_SCANCODE_SPACE))
+    {
+        entity_list_.push_back(std::make_unique<Entity>(glm::vec2{ mouse_position_[0] / 4, mouse_position_[1] /4 }));
+    }
+    if (input_.IsKeyHeld(SDL_SCANCODE_W))
+    {
+        dir_.y = -1.0f;
+        
+    }
     if (input_.IsKeyHeld(SDL_SCANCODE_A)) dir_.x = -1.0f;
     if (input_.IsKeyHeld(SDL_SCANCODE_S)) dir_.y = 1.0f;
     if (input_.IsKeyHeld(SDL_SCANCODE_D)) dir_.x = 1.0f;
@@ -167,50 +169,35 @@ void Game::HandleInput()
 
 void Game::Update(float delta_time)
 {
-    // integrate
-    for (const auto& physics_body : physics_bodies_) {
-        glm::vec2 addedVelocity = glm::vec2(0.0f);
-        if (physics_body == physics_bodies_[0])
-        {
-            physics_body->force = dir_ * 1000.0f;
-            //physics_body->velocity = dir_ * 50.0f;
-            addedVelocity = dir_ * 1.0f * 32.0f;
-        }
-
-        
-        glm::vec2 acceleration = (physics_body->velocity + addedVelocity - physics_body->velocity) / delta_time;
-
-        //glm::vec2 acceleration = physics_body->force / physics_body->mass;
-        acceleration -= physics_body->velocity * physics_body->friction; // apply friction
-
-        physics_body->velocity += acceleration * delta_time;
-        physics_body->position += 0.5f * (physics_body->velocity + (physics_body->velocity + acceleration * delta_time)) * delta_time;
-    }
+    player_->AddVelocity(dir_ * 2.0f);
     
-    // constraint = pointB - pointA dot normal >= 0
-    for (const auto& physics_body_A : physics_bodies_)
-    {
-        for (const auto& physics_body_B : physics_bodies_)
+    /// PHYSICS
+    for (const auto& entity : entity_list_) {
+        // INTEGRATE
+        entity->Update(delta_time);
+
+        // SOLVE COLLISION
+        for (const auto& other : entity_list_)
         {
-            if (physics_body_A == physics_body_B) break;
+            if (entity == other) break;
 
             CollisionPoints collision_points;
-            if (CircleVsCircle(physics_body_A->position, physics_body_A->radius, physics_body_B->position, physics_body_B->radius, collision_points))
+            if (CircleVsCircle(entity->Position(), entity->Radius(), other->Position(), other->Radius(), collision_points))
             {
                 glm::vec2 j_va = -collision_points.normal;
                 glm::vec2 j_vb = collision_points.normal;
-                float k = (1.0f / physics_body_A->mass) + (1.0f / physics_body_B->mass); // mass matrix
+                float k = (1.0f / entity->Mass()) + (1.0f / other->Mass()); // mass matrix
                 float effective_mass = 1.0f / k;
 
                 // bias
                 float b = (0.1f / delta_time) * glm::dot(collision_points.b - collision_points.a, collision_points.normal);
 
-                float jv = glm::dot(j_va, physics_body_A->velocity) + glm::dot(j_vb, physics_body_B->velocity);
+                float jv = glm::dot(j_va, entity->Velocity()) + glm::dot(j_vb, other->Velocity());
                 float lambda = effective_mass * (-(jv + b));
 
                 // apply impulse
-                physics_body_A->velocity += (1.0f / physics_body_A->mass) * j_va * lambda;
-                physics_body_B->velocity += (1.0f / physics_body_B->mass) * j_vb * lambda;
+                entity->AddVelocity((1.0f / entity->Mass()) * j_va * lambda);
+                other->AddVelocity((1.0f / other->Mass()) * j_vb * lambda);
             }
         }
     }
@@ -220,22 +207,9 @@ void Game::Update(float delta_time)
 
 void Game::Draw()
 {
-    // glm::vec2 circleAPos = { 400, 300 };
-    // CollisionPoints collisionPoints;
-    // bool collision = CircleVsCircle(circleAPos, 60.0f, glm::vec2{ mouse_position_[0], mouse_position_[1] }, 80.0f, collisionPoints);
-
-    // renderer_.DrawCircle(circleAPos, 60.0f, glm::vec3{ 1, 0, 1 });
-    // renderer_.DrawCircle(glm::vec2{ mouse_position_[0], mouse_position_[1] }, 80.0f, collision ? glm::vec3{ 1, 0, 0 } : glm::vec3{ 0, 1, 1 });
-
-    // if (collision)
-    // {
-    //     renderer_.DrawCircle(collisionPoints.a, 10.0f, glm::vec3{ 1, 1, 0 });
-    //     renderer_.DrawCircle(collisionPoints.b, 10.0f, glm::vec3{ 0, 0, 1 });
-    // }
-
-    for (const auto& physics_body : physics_bodies_)
+    for (const auto& physics_body : entity_list_)
     {
-        renderer_.DrawCircle(physics_body->position, physics_body->radius, physics_body == physics_bodies_[0] ? glm::vec3{ 0, 1, 0 } : glm::vec3{ 1, 1, 1 });
+        renderer_.DrawCircle(physics_body->Position(), physics_body->Radius(), glm::vec3{ 1, 1, 1 });
     }
 }
 

@@ -5,20 +5,25 @@
 #include <glad/glad.h>
 #include <SDL2/SDL_opengl.h>
 
+#include <vector>
+#include <memory>
+
 #include "Input.h"
 #include "Renderer.h"
 #include "TextRenderer.h"
 #include "Font.h"
 
+#include "Entity.h"
+#include "EntityPlayer.h"
 #include "Physics.h"
 
-#include <vector>
-#include <memory>
+typedef std::shared_ptr<Entity> EntityPtr;
+typedef std::vector<EntityPtr> EntityList;
 
 class Game
 {
 public:
-    Game() {};
+    Game();
 
     bool Init();
     void Run();
@@ -42,7 +47,8 @@ private:
     int mouse_position_[2];
     glm::vec2 dir_;
 
-    std::vector<std::unique_ptr<PhysicsBody>> physics_bodies_;
+    EntityPtr player_;
+    EntityList entity_list_;
 
 };
 

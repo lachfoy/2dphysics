@@ -7,6 +7,9 @@ OBJECTS := glad.o\
 	Renderer.o\
 	Font.o\
 	TextRenderer.o\
+	Entity.o\
+	EntityPlayer.o\
+	GridEntity.o\
 	Physics.o\
 	Game.o\
 	main.o
